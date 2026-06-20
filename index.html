@@ -53,11 +53,22 @@
   .hero{margin:24px 0 4px;border:1px solid var(--line);border-radius:18px;background:var(--surface);
         background-image:radial-gradient(circle, rgba(15,110,86,.06) 1.3px, transparent 1.4px);
         background-size:22px 22px;background-position:-6px -6px;overflow:hidden}
-  .hero-inner{padding:34px 28px;animation:rise .5s ease both}
+  .hero-inner{padding:34px 28px;animation:rise .5s ease both;display:flex;align-items:center;justify-content:space-between;gap:26px}
+  .hero-text{min-width:0}
+  .hero-art{flex-shrink:0;width:200px;height:150px}
+  .hero-art img{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;border:1px solid var(--line)}
   .eyebrow{margin:0 0 10px;font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:700}
   .eyebrow::before{content:"";display:inline-block;width:22px;height:1.5px;background:var(--accent);vertical-align:middle;margin-right:8px}
   .hero h1{font-family:var(--font-display);font-size:27px;line-height:1.5;margin:0 0 10px;font-weight:600;letter-spacing:.01em}
   .hero p{margin:0;color:var(--muted);font-size:14px;max-width:46ch}
+  .hero-photo{position:relative}
+  .hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(4px);transform:scale(1.08);z-index:0}
+  .hero-photo::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg, rgba(11,79,62,.85), rgba(11,79,62,.5))}
+  .hero-photo .hero-inner{position:relative;z-index:2;min-height:120px}
+  .hero-photo .hero-text h1{color:#fff}
+  .hero-photo .hero-text p{color:rgba(255,255,255,.92)}
+  .hero-photo .eyebrow{color:#CDEBDF}
+  .hero-photo .eyebrow::before{background:#CDEBDF}
   @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
   .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:30px 0 14px}
@@ -131,6 +142,7 @@
     .bar{flex-direction:column;align-items:stretch}
     .acct{justify-content:space-between}
     .hero-inner{padding:26px 20px}
+    .hero-art{display:none}
     .hero h1{font-size:22px}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -156,11 +168,14 @@
 
   <!-- ===== ハブ：問題集を選ぶ ===== -->
   <section id="view-hub">
-    <section class="hero">
+    <section class="hero hero-photo">
+      <img class="hero-bg" src="study-hero.jpg" alt="" aria-hidden="true">
       <div class="hero-inner">
-        <h1>試験問題集</h1>
-        <p class="eyebrow">分野を選んでください</p>
-        <p>学びたい分野の問題集を選ぶと、その中の問題が一覧で表示されます。</p>
+        <div class="hero-text">
+          <h1>試験問題集</h1>
+          <p class="eyebrow">分野を選んでください</p>
+          <p>学びたい分野の問題集を選ぶと、その中の問題が一覧で表示されます。</p>
+        </div>
       </div>
     </section>
     <div class="section-head"><h2>問題集を選ぶ</h2></div>
@@ -173,11 +188,14 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
       問題集一覧へ
     </button>
-    <section class="hero">
+    <section class="hero hero-photo">
+      <img class="hero-bg" src="study-hero.jpg" alt="" aria-hidden="true">
       <div class="hero-inner">
-        <h1 id="hero-title">試験問題集</h1>
-        <p class="eyebrow" id="hero-eyebrow">第２種ME専門試験編</p>
-        <p id="hero-sub">ご購入時のメールアドレスでログインすると、購入済みの問題がここに並びます。</p>
+        <div class="hero-text">
+          <h1 id="hero-title">試験問題集</h1>
+          <p class="eyebrow" id="hero-eyebrow">第２種ME専門試験編</p>
+          <p id="hero-sub">ご購入時のメールアドレスでログインすると、購入済みの問題がここに並びます。</p>
+        </div>
       </div>
     </section>
     <div class="section-head">
@@ -403,6 +421,10 @@ const yen = (n)=> "¥" + Number(n).toLocaleString("ja-JP");
 const EXAM_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><path d="M8.5 14.5l2 2 4-4"/></svg>';
 const STACK_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>';
 const CHEVRON_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+const ICON_ECG   = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 13h4l2-6 3 12 2.5-8H22"/></svg>';
+const ICON_CHIP  = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 3v3M14 3v3M10 18v3M14 18v3M3 10h3M3 14h3M18 10h3M18 14h3"/></svg>';
+const ICON_CROSS = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+const CAT_ICONS = { cat1: ICON_ECG, cat2: ICON_CHIP, cat3: ICON_CROSS };
 
 function render(){
   renderAccount();
@@ -457,7 +479,7 @@ function renderHub(){
       right = '<span class="cat-tag">準備中</span>';
     }
     div.innerHTML =
-      '<span class="cat-ic">' + STACK_ICON + '</span>' +
+      '<span class="cat-ic">' + (CAT_ICONS[c.id] || STACK_ICON) + '</span>' +
       '<div class="cat-mid"><h3>' + escapeHtml(c.title) + '</h3><p>' + escapeHtml(c.desc) + '</p>' + metaHtml + '</div>' +
       right;
     if(published){ div.onclick = ()=> openCategory(c.id); }
