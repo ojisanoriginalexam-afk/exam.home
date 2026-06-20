@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>おじさんの試験対策ページ</title>
+<meta name="theme-color" content="#0F6E56" />
+<!-- ▼ PWA：別途 manifest.json と icons を用意したら有効になります -->
+<link rel="manifest" href="manifest.json" />
+<style>
+  :root{
+    --bg:#F7F6F2; --surface:#FFFFFF; --ink:#18302C; --muted:#5C6B66;
+    --line:#E4E7E2; --accent:#0F6E56; --accent-ink:#0B4F3E; --accent-tint:#E2F2EB;
+    --owned:#E8F1FA; --owned-line:#CFE1F3; --owned-ink:#1A5F99;
+    --focus:#1D9E75; --radius:14px; --maxw:960px;
+    --font:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+    --font-display:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+    --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.7;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent-ink)}
+  button{font-family:inherit}
+  :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+
+  header.site{border-top:3px solid var(--accent);background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em;cursor:pointer}
+  .brand .mark{width:30px;height:30px;border-radius:8px;background:var(--accent-tint);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+  .brand .name{font-size:16px}
+  .acct{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .chip{font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 10px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .btn{cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;font-size:14px;transition:background .15s,border-color .15s,transform .05s}
+  .btn:hover{background:#f1f0ec}
+  .btn:active{transform:scale(.985)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#0c5d49}
+  .btn.buy{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.buy:hover{background:#0c5d49}
+  .btn.open{background:#1F6FB2;border-color:#1F6FB2;color:#fff}
+  .btn.open:hover{background:#1a5f99}
+  .btn.small{padding:7px 12px;font-size:13px}
+  .btn.block{width:100%;justify-content:center;display:inline-flex;align-items:center;gap:6px}
+  .btn.ghost{background:transparent}
+
+  .back{display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:transparent;border:none;color:var(--accent-ink);font-size:13px;padding:0;margin:22px 0 0}
+  .back:hover{text-decoration:underline}
+
+  .hero{margin:24px 0 4px;border:1px solid var(--line);border-radius:18px;background:var(--surface);
+        background-image:radial-gradient(circle, rgba(15,110,86,.06) 1.3px, transparent 1.4px);
+        background-size:22px 22px;background-position:-6px -6px;overflow:hidden}
+  .hero-inner{padding:34px 28px;animation:rise .5s ease both}
+  .eyebrow{margin:0 0 10px;font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:700}
+  .eyebrow::before{content:"";display:inline-block;width:22px;height:1.5px;background:var(--accent);vertical-align:middle;margin-right:8px}
+  .hero h1{font-family:var(--font-display);font-size:27px;line-height:1.5;margin:0 0 10px;font-weight:600;letter-spacing:.01em}
+  .hero p{margin:0;color:var(--muted);font-size:14px;max-width:46ch}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:30px 0 14px}
+  .section-head h2{font-size:17px;margin:0;font-weight:700;display:flex;align-items:center;gap:9px}
+  .section-head h2::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--accent)}
+  .section-head .hint{font-size:12px;color:var(--muted)}
+
+  /* ハブ（問題集を選ぶ） */
+  .cat-list{display:flex;flex-direction:column;gap:12px;padding-bottom:8px}
+  .cat{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);transition:border-color .15s,transform .15s,box-shadow .15s}
+  .cat.open{cursor:pointer}
+  .cat.open:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 18px rgba(24,48,44,.06)}
+  .cat.soon{opacity:.62}
+  .cat-ic{width:42px;height:42px;border-radius:11px;background:var(--accent-tint);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .cat-mid{flex:1;min-width:0}
+  .cat-mid h3{font-size:15.5px;margin:0 0 3px;font-weight:700}
+  .cat-mid p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .cat-meta{font-size:11px;color:var(--muted);margin-top:5px}
+  .cat-go{color:var(--accent);flex-shrink:0;display:flex;align-items:center}
+  .cat-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line);flex-shrink:0}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;padding-bottom:8px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;transition:border-color .15s,transform .15s,box-shadow .15s}
+  .card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 18px rgba(24,48,44,.06)}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+  .idx{font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--accent-ink);background:var(--accent-tint);width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+  .idx svg{width:21px;height:21px}
+  .card.owned .idx{background:#1F6FB2;color:#fff;width:48px;height:48px;border-radius:12px}
+  .card.owned .idx svg{width:28px;height:28px}
+  .card .tag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
+  .card.owned{background:var(--owned);border-color:var(--owned-line)}
+  .card.owned:hover{border-color:var(--owned-ink)}
+  .tag.owned{background:#D7E7F7;color:var(--owned-ink)}
+  .tag.locked{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+  .card h3{font-size:15.5px;margin:0 0 6px;font-weight:700;line-height:1.5}
+  .card .desc{font-size:13px;color:var(--muted);margin:0 0 14px;flex:1}
+  .card .price{font-size:19px;font-weight:700;margin:0 0 12px}
+  .card .price small{font-size:11px;color:var(--muted);font-weight:400}
+
+  .note{background:var(--accent-tint);color:var(--accent-ink);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6}
+
+  footer.site{border-top:1px solid var(--line);margin-top:40px;background:var(--surface)}
+  footer .inner{padding:20px 0 34px;display:flex;flex-direction:column;gap:8px}
+  footer .links{display:flex;gap:16px;flex-wrap:wrap}
+  footer .links a{cursor:pointer;color:var(--muted);font-size:13px;text-decoration:none;border-bottom:1px solid transparent}
+  footer .links a:hover{color:var(--ink);border-bottom-color:var(--line)}
+  footer .fine{font-size:11px;color:var(--muted)}
+
+  .overlay{position:fixed;inset:0;background:rgba(20,30,28,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+  .overlay.open{display:flex}
+  .dialog{background:var(--surface);border-radius:16px;max-width:420px;width:100%;padding:22px;max-height:90vh;overflow:auto}
+  .dialog h2{font-size:17px;margin:0 0 4px}
+  .dialog .lead{font-size:13px;color:var(--muted);margin:0 0 16px}
+  .dialog label{display:block;font-size:13px;margin:0 0 6px;color:var(--muted)}
+  .dialog input[type=email]{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;margin-bottom:12px;font-family:inherit}
+  .dialog .x{float:right;cursor:pointer;border:none;background:transparent;color:var(--muted);font-size:20px;line-height:1;padding:2px 6px}
+  .dialog .body{font-size:13.5px;color:var(--ink)}
+  .dialog .body p{margin:0 0 10px}
+  .kv{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13px}
+  .kv .k{color:var(--muted);min-width:120px}
+  .kv .v{flex:1}
+
+  @media (max-width:560px){
+    .bar{flex-direction:column;align-items:stretch}
+    .acct{justify-content:space-between}
+    .hero-inner{padding:26px 20px}
+    .hero h1{font-size:22px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap bar">
+    <div class="brand" id="brand-home" title="問題集一覧へ">
+      <span class="mark" aria-hidden="true">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v6h6"/></svg>
+      </span>
+      <span class="name">おじさんの試験対策ページ</span>
+    </div>
+    <div class="acct" id="acct"><!-- ログイン状態に応じて描画 --></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ===== ハブ：問題集を選ぶ ===== -->
+  <section id="view-hub">
+    <section class="hero">
+      <div class="hero-inner">
+        <h1>試験問題集</h1>
+        <p class="eyebrow">分野を選んでください</p>
+        <p>学びたい分野の問題集を選ぶと、その中の問題が一覧で表示されます。</p>
+      </div>
+    </section>
+    <div class="section-head"><h2>問題集を選ぶ</h2></div>
+    <div class="cat-list" id="cat-list"><!-- カテゴリを描画 --></div>
+  </section>
+
+  <!-- ===== 各問題集：一覧・購入・ライブラリ ===== -->
+  <section id="view-category" style="display:none">
+    <button class="back" id="btn-back-hub" aria-label="問題集一覧へ戻る">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      問題集一覧へ
+    </button>
+    <section class="hero">
+      <div class="hero-inner">
+        <h1 id="hero-title">試験問題集</h1>
+        <p class="eyebrow" id="hero-eyebrow">第２種ME専門試験編</p>
+        <p id="hero-sub">ご購入時のメールアドレスでログインすると、購入済みの問題がここに並びます。</p>
+      </div>
+    </section>
+    <div class="section-head">
+      <h2 id="list-title">問題一覧</h2>
+      <span class="hint" id="list-hint"></span>
+    </div>
+    <section class="grid" id="grid"><!-- カードを描画 --></section>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap inner">
+    <div class="links">
+      <a id="lnk-tokusho">特定商取引法に基づく表記</a>
+      <a id="lnk-privacy">プライバシーポリシー</a>
+      <a id="lnk-contact">お問い合わせ</a>
+    </div>
+    <div class="fine">© <span id="year"></span> おじさんの試験対策ページ</div>
+  </div>
+</footer>
+
+<!-- ===== モーダル ===== -->
+<div class="overlay" id="overlay">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title" id="dialog">
+    <button class="x" id="dlg-x" aria-label="閉じる">&times;</button>
+    <div id="dlg-content"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   設定（ここに「枠」を足していくだけ）
+   - CATEGORIES … 問題集（●●試験編）のまとまり
+   - CONTENT    … 各問題（どの問題集に属するかを categoryId で指定）
+   ========================================================================= */
+const SHOP = {
+  contactEmail: "contact@example.com"   // ← 公開する連絡用メール
+};
+
+/* 問題集（カテゴリ）。status は "published"（販売中）か "coming"（準備中） */
+const CATEGORIES = [
+  { id:"me2", title:"第２種ME専門試験編", desc:"基礎から直前対策まで対応した定番の問題集です。", status:"published" },
+  { id:"me1", title:"第１種ME専門試験編", desc:"上位資格に対応した問題集を準備中です。", status:"coming" },
+  { id:"ce",  title:"臨床工学技士 国家試験編", desc:"国家試験の要点をまとめた問題集を準備中です。", status:"coming" }
+];
+
+/* 各問題。categoryId で所属する問題集を指定する */
+const CONTENT = [
+  {
+    id: "setA", categoryId: "me2",
+    title: "第2種ME 模擬問題 セットA",
+    desc: "基礎の要点を確認できる問題セットです。",
+    price: 500,
+    buyUrl:     "https://buy.stripe.com/XXXXXXXX_setA",   // ← 決済リンク（後で差し替え）
+    contentUrl: "https://your-content-host.example/setA.html" // ← 閲覧用URL（後で差し替え）
+  },
+  {
+    id: "setB", categoryId: "me2",
+    title: "第2種ME 模擬問題 セットB",
+    desc: "実務でつまずきやすい点を整理した問題セットです。",
+    price: 500,
+    buyUrl:     "https://buy.stripe.com/XXXXXXXX_setB",
+    contentUrl: "https://your-content-host.example/setB.html"
+  },
+  {
+    id: "setC", categoryId: "me2",
+    title: "第2種ME 模擬問題 セットC",
+    desc: "復習・直前確認に使える要点セットです。",
+    price: 500,
+    buyUrl:     "https://buy.stripe.com/XXXXXXXX_setC",
+    contentUrl: "https://your-content-host.example/setC.html"
+  }
+];
+
+/* =========================================================================
+   ▼▼▼ ここがスプレッドシート / GAS をつなぐ場所（バックエンド連携点）▼▼▼
+
+   スプレッドシートに持たせる想定データ：
+     - 問題集（カテゴリ）マスタ：id / タイトル(●●試験編) / 説明 / 公開状態
+     - コンテンツマスタ：id / categoryId / タイトル / 価格 / 決済URL / 閲覧URL
+     - 購入記録：購入者メール / 購入したコンテンツ id（カテゴリは id からたどれる）
+     - ログイン用ワンタイムトークンと有効期限
+
+   実装時に差し替える3つの関数：
+     1) sendLoginLink(email)        … GASがワンタイムリンクをメール送信
+     2) consumeTokenFromUrl()       … URLのトークンを検証してログイン確定
+     3) fetchPurchases(email)       … そのメールの購入済み id 一覧を取得
+   （CATEGORIES / CONTENT も、将来はGASでシートから読み込む形に置き換え可能）
+   ========================================================================= */
+
+// ▼ GASのウェブアプリURL（デプロイ後にここへ貼り替える）。XXXX のままだとデモ動作になります。
+const GAS_URL = "https://script.google.com/macros/s/XXXXXXXXXXXXXXXX/exec";
+const GAS_READY = GAS_URL.indexOf("XXXX") === -1;
+
+// 1) ログインリンク送信
+async function sendLoginLink(email){
+  if(!GAS_READY){ console.log("[demo] ログインリンク送信:", email); return true; }
+  try{
+    const r = await fetch(GAS_URL + "?action=login&email=" + encodeURIComponent(email));
+    const d = await r.json();
+    return !!d.ok;
+  }catch(e){ console.error(e); return false; }
+}
+
+// 2) URLトークンの検証（メールのリンクから戻ってきたとき）
+async function consumeTokenFromUrl(){
+  const t = new URLSearchParams(location.search).get("token");
+  if(!t) return null;
+  if(!GAS_READY) return null;
+  try{
+    const r = await fetch(GAS_URL + "?action=verify&token=" + encodeURIComponent(t));
+    const d = await r.json();
+    history.replaceState("", document.title, location.pathname + location.hash); // URLからトークンを消す
+    return d.ok ? d.email : null;
+  }catch(e){ console.error(e); return null; }
+}
+
+// 3) 購入済みコンテンツの取得
+async function fetchPurchases(email){
+  if(!GAS_READY) return DEMO_PURCHASES[email] || [];
+  try{
+    const r = await fetch(GAS_URL + "?action=purchases&email=" + encodeURIComponent(email));
+    const d = await r.json();
+    return d.ok ? d.ids : [];
+  }catch(e){ console.error(e); return []; }
+}
+
+// デモ用の擬似購入データ（GAS未設定のときだけ使用）
+const DEMO_PURCHASES = { "demo@example.com": ["setA","setB"] };
+
+/* =========================================================================
+   状態管理とログインセッション
+   ========================================================================= */
+const state = { email:null, purchased:new Set(), view:"hub", cat:null };
+
+function saveSession(email){ try{ localStorage.setItem("store_email", email); }catch(e){} }
+function loadSession(){ try{ return localStorage.getItem("store_email"); }catch(e){ return null; } }
+function clearSession(){ try{ localStorage.removeItem("store_email"); }catch(e){} }
+
+async function loginAs(email){
+  state.email = email;
+  saveSession(email);
+  const ids = await fetchPurchases(email);
+  state.purchased = new Set(ids);
+  render();
+}
+function logout(){ state.email=null; state.purchased=new Set(); clearSession(); render(); }
+
+/* =========================================================================
+   描画
+   ========================================================================= */
+const $ = (id)=>document.getElementById(id);
+const yen = (n)=> "¥" + Number(n).toLocaleString("ja-JP");
+
+const EXAM_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><path d="M8.5 14.5l2 2 4-4"/></svg>';
+const STACK_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>';
+const CHEVRON_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+
+function render(){
+  renderAccount();
+  const inCategory = (state.view === "category" && state.cat);
+  $("view-hub").style.display      = inCategory ? "none" : "";
+  $("view-category").style.display = inCategory ? "" : "none";
+  if(inCategory){ renderCategory(); } else { renderHub(); }
+}
+
+function renderAccount(){
+  const el = $("acct");
+  if(state.email){
+    el.innerHTML =
+      '<span class="chip" title="'+escapeAttr(state.email)+'">'+escapeHtml(state.email)+'</span>'+
+      '<button class="btn small" id="btn-a2hs">ホーム画面に追加</button>'+
+      '<button class="btn small ghost" id="btn-logout">ログアウト</button>';
+    $("btn-logout").onclick = logout;
+    $("btn-a2hs").onclick = addToHomeScreen;
+  } else {
+    el.innerHTML =
+      '<button class="btn small" id="btn-a2hs">ホーム画面に追加</button>'+
+      '<button class="btn primary small" id="btn-login">ログイン</button>';
+    $("btn-login").onclick = openLogin;
+    $("btn-a2hs").onclick = addToHomeScreen;
+  }
+}
+
+/* ハブ：問題集（カテゴリ）の一覧 */
+function renderHub(){
+  const list = $("cat-list");
+  list.innerHTML = "";
+  CATEGORIES.forEach(c=>{
+    const items = CONTENT.filter(x=> x.categoryId === c.id);
+    const published = (c.status === "published");
+    const div = document.createElement("div");
+    div.className = "cat" + (published ? " open" : " soon");
+    let metaHtml = "", right = "";
+    if(published){
+      let meta = "全" + items.length + "問題集";
+      if(state.email){
+        const owned = items.filter(x=> state.purchased.has(x.id)).length;
+        meta += owned > 0 ? " ・ " + owned + "件 購入済み" : " ・ 販売中";
+      } else {
+        meta += " ・ 販売中";
+      }
+      metaHtml = '<div class="cat-meta">' + meta + '</div>';
+      right = '<span class="cat-go">' + CHEVRON_ICON + '</span>';
+    } else {
+      right = '<span class="cat-tag">準備中</span>';
+    }
+    div.innerHTML =
+      '<span class="cat-ic">' + STACK_ICON + '</span>' +
+      '<div class="cat-mid"><h3>' + escapeHtml(c.title) + '</h3><p>' + escapeHtml(c.desc) + '</p>' + metaHtml + '</div>' +
+      right;
+    if(published){ div.onclick = ()=> openCategory(c.id); }
+    list.appendChild(div);
+  });
+}
+
+/* 各問題集の中身（見出し＋一覧） */
+function renderCategory(){
+  const c = CATEGORIES.find(x=> x.id === state.cat);
+  if(!c){ backToHub(); return; }
+  $("hero-eyebrow").textContent = c.title;
+  if(state.email){
+    $("hero-title").textContent = "試験問題集";
+    $("hero-sub").textContent   = "「開く」で各問題を表示します。未購入のものは「購入する」から追加できます。";
+    $("list-title").textContent = "あなたのコンテンツ";
+    $("list-hint").textContent  = "ホーム画面に追加すると、アプリのように使えます。";
+  } else {
+    $("hero-title").textContent = "試験問題集";
+    $("hero-sub").textContent   = "ご購入時のメールアドレスでログインすると、購入済みの問題がここに並びます。";
+    $("list-title").textContent = "問題一覧";
+    $("list-hint").textContent  = "気になる問題を選んで購入できます。";
+  }
+  renderGrid(c.id);
+}
+
+function renderGrid(catId){
+  const grid = $("grid");
+  grid.innerHTML = "";
+  CONTENT.filter(item=> item.categoryId === catId).forEach(item=>{
+    const owned = state.purchased.has(item.id);
+    const card = document.createElement("div");
+    card.className = "card" + (owned ? " owned" : "");
+    const letter = String(item.id).replace(/^set/i,"").toUpperCase();
+    const badge = owned ? EXAM_ICON : escapeHtml(letter);
+    let inner = '<div class="card-head"><span class="idx">'+badge+'</span>';
+    if(state.email){
+      inner += owned
+        ? '<span class="tag owned">購入済み</span>'
+        : '<span class="tag locked">未購入</span>';
+    }
+    inner += '</div>';
+    inner += '<h3>'+escapeHtml(item.title)+'</h3>';
+    inner += '<p class="desc">'+escapeHtml(item.desc)+'</p>';
+    if(owned){
+      inner += '<button class="btn open block" data-open="'+item.id+'">'+EXAM_ICON+'開く</button>';
+    } else {
+      inner += '<p class="price">'+yen(item.price)+' <small>（税込）</small></p>';
+      inner += '<button class="btn buy block" data-buy="'+item.id+'">購入する</button>';
+    }
+    card.innerHTML = inner;
+    grid.appendChild(card);
+  });
+  grid.querySelectorAll("[data-open]").forEach(b=> b.onclick = ()=> openContent(b.getAttribute("data-open")));
+  grid.querySelectorAll("[data-buy]").forEach(b=> b.onclick = ()=> buy(b.getAttribute("data-buy")));
+}
+
+function openContent(id){
+  const item = CONTENT.find(c=>c.id===id);
+  if(item) window.open(item.contentUrl, "_blank", "noopener");
+}
+function buy(id){
+  const item = CONTENT.find(c=>c.id===id);
+  if(item) window.open(item.buyUrl, "_blank", "noopener");
+}
+
+/* =========================================================================
+   画面の切り替え（ハブ ⇄ 各問題集）。URLの #cat=... で直接開ける
+   ========================================================================= */
+function applyRoute(){
+  const m = (location.hash || "").match(/cat=([\w-]+)/);
+  if(m){
+    const c = CATEGORIES.find(x=> x.id === m[1] && x.status === "published");
+    if(c){ state.view = "category"; state.cat = c.id; render(); return; }
+  }
+  state.view = "hub"; state.cat = null; render();
+}
+function openCategory(id){ location.hash = "cat=" + id; }
+function backToHub(){
+  if(location.hash){ history.pushState("", document.title, location.pathname + location.search); }
+  applyRoute();
+}
+
+/* =========================================================================
+   モーダル（ログイン / 特商法 / プライバシー / 案内）
+   ========================================================================= */
+function showModal(html){
+  $("dlg-content").innerHTML = html;
+  $("overlay").classList.add("open");
+}
+function closeModal(){ $("overlay").classList.remove("open"); }
+
+function openLogin(){
+  showModal(
+    '<h2 id="dlg-title">メールでログイン</h2>'+
+    '<p class="lead">ご購入時のメールアドレスを入力してください。届いたメールのリンクからログインできます。</p>'+
+    '<label for="login-email">メールアドレス</label>'+
+    '<input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />'+
+    '<button class="btn primary block" id="btn-send">ログインリンクを送る</button>'+
+    '<div class="note" style="margin-top:14px">ご購入時と同じメールアドレスでログインしてください。別のメールだと購入物が分かれて表示されます。</div>'+
+    '<p style="margin:14px 0 0;text-align:center"><button class="btn small ghost" id="btn-demo">デモ：ログイン状態を確認（demo@example.com）</button></p>'
+  );
+  $("dlg-title").focus && $("dlg-title").focus();
+  $("btn-send").onclick = async ()=>{
+    const email = ($("login-email").value||"").trim();
+    if(!email){ $("login-email").focus(); return; }
+    await sendLoginLink(email);
+    showModal(
+      '<h2 id="dlg-title">メールを確認してください</h2>'+
+      '<p class="lead">'+escapeHtml(email)+' 宛にログインリンクを送信しました。メール内のリンクを開くとログインできます。</p>'+
+      '<button class="btn block" id="btn-close2">閉じる</button>'
+    );
+    $("btn-close2").onclick = closeModal;
+  };
+  $("btn-demo").onclick = ()=>{ closeModal(); loginAs("demo@example.com"); };
+}
+
+function openTokusho(){
+  showModal(
+    '<h2 id="dlg-title">特定商取引法に基づく表記</h2>'+
+    '<div class="body" style="margin-top:8px">'+
+      kv("販売事業者","請求があれば遅滞なく開示します")+
+      kv("所在地","請求があれば遅滞なく開示します")+
+      kv("電話番号","請求があれば遅滞なく開示します")+
+      kv("メールアドレス", escapeHtml(SHOP.contactEmail))+
+      kv("販売価格","各商品ページに表示（税込）")+
+      kv("商品代金以外の料金","なし（デジタル商品・送料なし）")+
+      kv("お支払い方法","クレジットカード ほか（決済サービスに準ずる）")+
+      kv("引渡し時期","決済完了後すぐに閲覧可能。開けない場合はお問い合わせ後、確認のうえ2営業日以内にメールでURLを送付します。")+
+      kv("返品・キャンセル","デジタル商品の性質上、購入後の返品・返金はできません。")+
+    '</div>'
+  );
+}
+function openPrivacy(){
+  showModal(
+    '<h2 id="dlg-title">プライバシーポリシー</h2>'+
+    '<div class="body" style="margin-top:8px">'+
+      '<p>取得したメールアドレスは、ログイン認証・コンテンツの提供・お問い合わせ対応の目的で利用します。</p>'+
+      '<p>クレジットカード情報は決済事業者が取り扱い、当方では保持しません。</p>'+
+      '<p>利用目的の達成に必要な範囲で適切に管理し、法令に基づく場合を除き第三者に提供しません。</p>'+
+      '<p>お問い合わせ先：'+escapeHtml(SHOP.contactEmail)+'</p>'+
+    '</div>'
+  );
+}
+function openContact(){
+  showModal(
+    '<h2 id="dlg-title">お問い合わせ</h2>'+
+    '<div class="body" style="margin-top:8px">'+
+      '<p>ご購入時のメールアドレスから、下記までご連絡ください。</p>'+
+      '<p><a href="mailto:'+escapeAttr(SHOP.contactEmail)+'">'+escapeHtml(SHOP.contactEmail)+'</a></p>'+
+      '<p>ダウンロードや閲覧ができない場合も、こちらで確認のうえ対応します。</p>'+
+    '</div>'
+  );
+}
+
+function kv(k,v){ return '<div class="kv"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>'; }
+
+/* =========================================================================
+   ホーム画面に追加（Android＝ワンタップ / iPhone＝案内）
+   ========================================================================= */
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt",(e)=>{ e.preventDefault(); deferredPrompt = e; });
+
+async function addToHomeScreen(){
+  if(deferredPrompt){                       // Android / Chromium
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    return;
+  }
+  const ua = navigator.userAgent || "";
+  const isiOS = /iPhone|iPad|iPod/i.test(ua);
+  if(isiOS){
+    showModal(
+      '<h2 id="dlg-title">ホーム画面に追加（iPhone）</h2>'+
+      '<div class="body" style="margin-top:8px">'+
+        '<p>画面下の共有ボタン（□から↑のアイコン）をタップし、一覧から「ホーム画面に追加」を選んでください。</p>'+
+        '<p>次回からアプリのように、このページを開けます。</p>'+
+      '</div>'
+    );
+  } else {
+    showModal(
+      '<h2 id="dlg-title">ホーム画面に追加</h2>'+
+      '<div class="body" style="margin-top:8px">'+
+        '<p>お使いのブラウザのメニューから「ホーム画面に追加」または「インストール」を選んでください。</p>'+
+      '</div>'
+    );
+  }
+}
+
+/* =========================================================================
+   小さなユーティリティ
+   ========================================================================= */
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function escapeAttr(s){ return escapeHtml(s).replace(/'/g,"&#39;"); }
+
+/* =========================================================================
+   初期化
+   ========================================================================= */
+$("dlg-x").onclick = closeModal;
+$("overlay").onclick = (e)=>{ if(e.target.id==="overlay") closeModal(); };
+document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
+$("lnk-tokusho").onclick = openTokusho;
+$("lnk-privacy").onclick = openPrivacy;
+$("lnk-contact").onclick = openContact;
+$("btn-back-hub").onclick = backToHub;
+$("brand-home").onclick = backToHub;
+$("year").textContent = new Date().getFullYear();
+window.addEventListener("hashchange", applyRoute);
+
+(async function init(){
+  applyRoute();                                    // URLの #cat=... に応じて画面を表示
+  const fromToken = await consumeTokenFromUrl();   // 本番：URLのトークンでログイン
+  const remembered = fromToken || loadSession();
+  if(remembered){ await loginAs(remembered); }
+})();
+
+/* PWA：sw.js を用意したら有効化
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=> navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+*/
+</script>
+</body>
+</html>
