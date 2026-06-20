@@ -89,6 +89,9 @@
   .card.owned .idx svg{width:28px;height:28px}
   .card .tag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
   .card.owned{background:var(--owned);border-color:var(--owned-line)}
+  .card.soon{opacity:.62}
+  .card.soon:hover{border-color:var(--line);transform:none;box-shadow:none}
+  .btn.soon{background:var(--bg);color:var(--muted);border-color:var(--line);cursor:default}
   .card.owned:hover{border-color:var(--owned-ink)}
   .tag.owned{background:#D7E7F7;color:var(--owned-ink)}
   .tag.locked{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
@@ -220,27 +223,29 @@ const CATEGORIES = [
 const CONTENT = [
   {
     id: "setA", categoryId: "me2",
-    title: "第2種ME 模擬問題 セットA",
-    desc: "基礎の要点を確認できる問題セットです。",
+    title: "第４６回　午前",
+    desc: "午前の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです",
     price: 500,
-    buyUrl:     "https://buy.stripe.com/XXXXXXXX_setA",   // ← 決済リンク（後で差し替え）
-    contentUrl: "https://your-content-host.example/setA.html" // ← 閲覧用URL（後で差し替え）
+    buyUrl:     "https://buy.stripe.com/bJecN6e81dSkfo7bx3ds401",
+    contentUrl: "https://ojisanoriginalexam-afk.github.io/me2-exam/round46_am_me2/"
   },
   {
     id: "setB", categoryId: "me2",
-    title: "第2種ME 模擬問題 セットB",
-    desc: "実務でつまずきやすい点を整理した問題セットです。",
+    title: "第４６回　午後",
+    desc: "午後の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです",
     price: 500,
-    buyUrl:     "https://buy.stripe.com/XXXXXXXX_setB",
-    contentUrl: "https://your-content-host.example/setB.html"
+    buyUrl:     "https://buy.stripe.com/28E14o7JDaG83Fp44Bds400",
+    contentUrl: "https://ojisanoriginalexam-afk.github.io/me2-exam/round46_pm_me2/"
   },
   {
-    id: "setC", categoryId: "me2",
-    title: "第2種ME 模擬問題 セットC",
-    desc: "復習・直前確認に使える要点セットです。",
-    price: 500,
-    buyUrl:     "https://buy.stripe.com/XXXXXXXX_setC",
-    contentUrl: "https://your-content-host.example/setC.html"
+    id: "setC", categoryId: "me2", status: "coming",
+    title: "第４５回　午前",
+    desc: "午前の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです"
+  },
+  {
+    id: "setD", categoryId: "me2", status: "coming",
+    title: "第４５回　午後",
+    desc: "午後の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです"
   }
 ];
 
@@ -409,13 +414,16 @@ function renderGrid(catId){
   const grid = $("grid");
   grid.innerHTML = "";
   CONTENT.filter(item=> item.categoryId === catId).forEach(item=>{
-    const owned = state.purchased.has(item.id);
+    const coming = item.status === "coming";
+    const owned = !coming && state.purchased.has(item.id);
     const card = document.createElement("div");
-    card.className = "card" + (owned ? " owned" : "");
+    card.className = "card" + (coming ? " soon" : (owned ? " owned" : ""));
     const letter = String(item.id).replace(/^set/i,"").toUpperCase();
     const badge = owned ? EXAM_ICON : escapeHtml(letter);
     let inner = '<div class="card-head"><span class="idx">'+badge+'</span>';
-    if(state.email){
+    if(coming){
+      inner += '<span class="tag locked">準備中</span>';
+    } else if(state.email){
       inner += owned
         ? '<span class="tag owned">購入済み</span>'
         : '<span class="tag locked">未購入</span>';
@@ -423,7 +431,9 @@ function renderGrid(catId){
     inner += '</div>';
     inner += '<h3>'+escapeHtml(item.title)+'</h3>';
     inner += '<p class="desc">'+escapeHtml(item.desc)+'</p>';
-    if(owned){
+    if(coming){
+      inner += '<button class="btn soon block" disabled>準備中</button>';
+    } else if(owned){
       inner += '<button class="btn open block" data-open="'+item.id+'">'+EXAM_ICON+'開く</button>';
     } else {
       inner += '<p class="price">'+yen(item.price)+' <small>（税込）</small></p>';
