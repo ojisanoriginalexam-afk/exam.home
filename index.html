@@ -220,15 +220,15 @@ const SHOP = {
 
 /* 問題集（カテゴリ）。status は "published"（販売中）か "coming"（準備中） */
 const CATEGORIES = [
-  { id:"me2", title:"第２種ME専門試験編", desc:"基礎から直前対策まで対応した定番の問題集です。", status:"published" },
-  { id:"me1", title:"第１種ME専門試験編", desc:"上位資格に対応した問題集を準備中です。", status:"coming" },
-  { id:"ce",  title:"臨床工学技士 国家試験編", desc:"国家試験の要点をまとめた問題集を準備中です。", status:"coming" }
+  { id:"cat1", title:"第２種ME専門試験編", desc:"基礎から直前対策まで対応した定番の問題集です。", status:"published" },
+  { id:"cat2", title:"第１種ME専門試験編", desc:"上位資格に対応した問題集を準備中です。", status:"coming" },
+  { id:"cat3", title:"臨床工学技士 国家試験編", desc:"国家試験の要点をまとめた問題集を準備中です。", status:"coming" }
 ];
 
 /* 各問題。categoryId で所属する問題集を指定する */
 const CONTENT = [
   {
-    id: "setA", categoryId: "me2",
+    id: "setA", categoryId: "cat1",
     title: "第４６回　午前",
     desc: "午前の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです",
     price: 500,
@@ -236,7 +236,7 @@ const CONTENT = [
     contentUrl: "https://ojisanoriginalexam-afk.github.io/me2-exam/round46_am_me2/"
   },
   {
-    id: "setB", categoryId: "me2",
+    id: "setB", categoryId: "cat1",
     title: "第４６回　午後",
     desc: "午後の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです",
     price: 500,
@@ -244,12 +244,12 @@ const CONTENT = [
     contentUrl: "https://ojisanoriginalexam-afk.github.io/me2-exam/round46_pm_me2/"
   },
   {
-    id: "setC", categoryId: "me2", status: "coming",
+    id: "setC", categoryId: "cat1", status: "coming",
     title: "第４５回　午前",
     desc: "午前の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです"
   },
   {
-    id: "setD", categoryId: "me2", status: "coming",
+    id: "setD", categoryId: "cat1", status: "coming",
     title: "第４５回　午後",
     desc: "午後の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです"
   }
@@ -314,7 +314,8 @@ const DEMO_PURCHASES = { "demo@example.com": ["setA","setB"] };
 /* =========================================================================
    状態管理とログインセッション
    ========================================================================= */
-const state = { email:null, purchased:new Set(), view:"hub", cat:null };
+const state = { email:null, purchased:new Set(), visible:null, view:"hub", cat:null }; // visible: null=全表示 / Set=表示する編id
+let anonVisible = null; // 未ログイン時に表示する編（DEFAULT）
 
 function saveSession(email){ try{ localStorage.setItem("store_email", email); }catch(e){} }
 function loadSession(){ try{ return localStorage.getItem("store_email"); }catch(e){ return null; } }
@@ -325,9 +326,21 @@ async function loginAs(email){
   saveSession(email);
   const ids = await fetchPurchases(email);
   state.purchased = new Set(ids);
+  state.visible = await fetchVisible(email);
   render();
 }
-function logout(){ state.email=null; state.purchased=new Set(); clearSession(); render(); }
+function logout(){ state.email=null; state.purchased=new Set(); state.visible=anonVisible; clearSession(); render(); }
+
+// 表示してよい編のid（null=全部表示）。未ログイン時はDEFAULTが返る。
+async function fetchVisible(email){
+  if(!GAS_READY) return null;
+  try{
+    const r = await fetch(GAS_URL + "?action=visible&email=" + encodeURIComponent(email||""));
+    const d = await r.json();
+    if(!d.ok || d.all) return null;
+    return new Set(d.ids || []);
+  }catch(e){ return null; }
+}
 
 /* 購入状況の再取得（ヘッダーの「購入状況を更新」ボタン） */
 async function refreshPurchases(){
@@ -421,6 +434,7 @@ function renderHub(){
   const list = $("cat-list");
   list.innerHTML = "";
   CATEGORIES.forEach(c=>{
+    if(state.visible && !state.visible.has(c.id)) return; // この利用者には非表示の編
     const items = CONTENT.filter(x=> x.categoryId === c.id);
     const published = (c.status === "published");
     const div = document.createElement("div");
@@ -452,6 +466,7 @@ function renderHub(){
 function renderCategory(){
   const c = CATEGORIES.find(x=> x.id === state.cat);
   if(!c){ backToHub(); return; }
+  if(state.visible && !state.visible.has(c.id)){ backToHub(); return; } // 非表示の編は開かせない
   $("hero-eyebrow").textContent = c.title;
   if(state.email){
     $("hero-title").textContent = "試験問題集";
@@ -657,6 +672,8 @@ $("year").textContent = new Date().getFullYear();
 window.addEventListener("hashchange", applyRoute);
 
 (async function init(){
+  anonVisible = await fetchVisible("");            // 未ログイン時の表示（DEFAULT）
+  state.visible = anonVisible;
   applyRoute();                                    // URLの #cat=... に応じて画面を表示
   const fromToken = await consumeTokenFromUrl();   // 本番：URLのトークンでログイン
   const remembered = fromToken || loadSession();
