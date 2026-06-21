@@ -75,6 +75,15 @@
   .section-head h2{font-size:17px;margin:0;font-weight:700;display:flex;align-items:center;gap:9px}
   .section-head h2::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--accent)}
   .section-head .hint{font-size:12px;color:var(--muted)}
+  .guide-link{font-size:13px;color:var(--accent);cursor:pointer;font-weight:600;white-space:nowrap}
+  .guide-link:hover{text-decoration:underline}
+  .gstep{display:flex;gap:12px;align-items:flex-start;margin:12px 0}
+  .gnum{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .gtxt{font-size:14px;line-height:1.7}
+  .gtxt b{color:var(--ink)}
+  .gnote{margin-top:14px;padding:12px 14px;background:var(--accent-tint);border-radius:10px;font-size:13px;line-height:1.7}
+  .gnote p{margin:0 0 8px}
+  .gnote p:last-child{margin:0}
 
   /* ハブ（問題集を選ぶ） */
   .cat-list{display:flex;flex-direction:column;gap:12px;padding-bottom:8px}
@@ -178,7 +187,7 @@
         </div>
       </div>
     </section>
-    <div class="section-head"><h2>問題集を選ぶ</h2></div>
+    <div class="section-head"><h2>問題集を選ぶ</h2><a class="guide-link" id="lnk-guide-top">はじめての方へ・ご利用ガイド ›</a></div>
     <div class="cat-list" id="cat-list"><!-- カテゴリを描画 --></div>
   </section>
 
@@ -211,6 +220,7 @@
   <div class="wrap inner">
     <div class="links">
       <a id="lnk-tokusho" href="tokushoho.html">特定商取引法に基づく表記</a>
+      <a id="lnk-guide">ご利用ガイド</a>
       <a id="lnk-privacy">プライバシーポリシー</a>
       <a id="lnk-contact">お問い合わせ</a>
     </div>
@@ -641,6 +651,27 @@ function openContact(){
   );
 }
 
+function openGuide(){
+  showModal(
+    '<h2 id="dlg-title">ご利用ガイド（使い方）</h2>'+
+    '<div class="body" style="margin-top:8px">'+
+      '<p>試験対策のデジタル問題集を購入して、このページ上でご利用いただけます。はじめての方は、次の流れをご覧ください。</p>'+
+      guideStep("1","問題集を選ぶ","「問題集を選ぶ」から編を選び、回（午前・午後）を選びます。購入前でも内容と価格をご確認いただけます。")+
+      guideStep("2","購入する","「購入する」を押すと決済画面に進みます。クレジットカードのほか、Apple Pay・Google Pay・PayPay（お使いの端末・ブラウザで対応している場合）がご利用いただけます。")+
+      guideStep("3","ログインする","購入後はこのページに戻り、<b>購入時と同じメールアドレス</b>でログインします。入力したアドレスにログイン用のリンクが届きますので、そのリンクを開いてください。")+
+      guideStep("4","問題を開く","ログインすると、購入済みの問題に「開く」ボタンが表示されます。押すと問題ページが開きます。")+
+      '<div class="gnote">'+
+        '<p><b>購入してもすぐに表示されないとき</b><br>ご購入の反映に数分かかる場合があります。少し時間をおいてから、画面上部の「購入状況を更新」を押してください。それでも表示されない場合はお問い合わせください。</p>'+
+        '<p><b>便利な使い方</b><br>「ホーム画面に追加」をしておくと、次回からアプリのように、このページをすぐ開けます。</p>'+
+      '</div>'+
+      '<p style="margin-top:14px">ご不明な点は <a href="mailto:'+escapeAttr(SHOP.contactEmail)+'">'+escapeHtml(SHOP.contactEmail)+'</a> までお問い合わせください。</p>'+
+    '</div>'
+  );
+}
+function guideStep(n,t,d){
+  return '<div class="gstep"><div class="gnum">'+n+'</div><div class="gtxt"><b>'+t+'</b><br>'+d+'</div></div>';
+}
+
 function kv(k,v){ return '<div class="kv"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>'; }
 
 /* =========================================================================
@@ -691,6 +722,8 @@ document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); })
 // 特商法は独立ページ（tokushoho.html）へ。footerのhrefで遷移します。
 $("lnk-privacy").onclick = openPrivacy;
 $("lnk-contact").onclick = openContact;
+$("lnk-guide").onclick = openGuide;
+var _gtop = $("lnk-guide-top"); if(_gtop) _gtop.onclick = openGuide;
 $("btn-back-hub").onclick = backToHub;
 $("brand-home").onclick = backToHub;
 $("year").textContent = new Date().getFullYear();
