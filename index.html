@@ -590,13 +590,12 @@ function closeModal(){ $("overlay").classList.remove("open"); }
 
 function openLogin(){
   showModal(
-    '<h2 id="dlg-title">メールでログイン</h2>'+
-    '<p class="lead">ご購入時のメールアドレスを入力してください。届いたメールのリンクからログインできます。</p>'+
+    '<h2 id="dlg-title">ログイン／新規登録</h2>'+
+    '<p class="lead">ご利用のメールアドレスを入力すると、届いたメールのリンクから登録・ログインができます。</p>'+
     '<label for="login-email">メールアドレス</label>'+
     '<input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />'+
-    '<button class="btn primary block" id="btn-send">ログインリンクを送る</button>'+
-    '<div class="note" style="margin-top:14px">ご購入時と同じメールアドレスでログインしてください。別のメールだと購入物が分かれて表示されます。</div>'+
-    '<p style="margin:14px 0 0;text-align:center"><button class="btn small ghost" id="btn-demo">デモ：ログイン状態を確認（demo@example.com）</button></p>'
+    '<button class="btn primary block" id="btn-send">送信する</button>'+
+    '<div class="note" style="margin-top:14px">はじめての方は、ご利用中のメールアドレスを入力して登録してください。ご購入済みの方は、購入時に使用したメールアドレスでログインしてください。別のメールアドレスだと、購入した問題が分かれて表示されます。</div>'
   );
   $("dlg-title").focus && $("dlg-title").focus();
   $("btn-send").onclick = async ()=>{
@@ -610,7 +609,6 @@ function openLogin(){
     );
     $("btn-close2").onclick = closeModal;
   };
-  $("btn-demo").onclick = ()=>{ closeModal(); loginAs("demo@example.com"); };
 }
 
 function openTokusho(){
