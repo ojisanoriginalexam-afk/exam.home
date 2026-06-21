@@ -458,8 +458,8 @@ function renderAccount(){
   } else {
     el.innerHTML =
       '<button class="btn small" id="btn-a2hs">ホーム画面に追加</button>'+
-      '<button class="btn primary small" id="btn-login">ログイン</button>';
-    $("btn-login").onclick = openLogin;
+      '<button class="btn primary small" id="btn-login">ログイン／登録</button>';
+    $("btn-login").onclick = ()=> openLogin();
     $("btn-a2hs").onclick = addToHomeScreen;
   }
 }
@@ -559,7 +559,11 @@ function openContent(id){
 }
 function buy(id){
   const item = CONTENT.find(c=>c.id===id);
-  if(item) window.open(item.buyUrl, "_blank", "noopener");
+  if(!item) return;
+  if(!state.email){ openLogin("purchase"); return; }   // 未ログインはログイン／新規登録へ
+  const sep = item.buyUrl.indexOf("?") >= 0 ? "&" : "?";
+  const url = item.buyUrl + sep + "locked_prefilled_email=" + encodeURIComponent(state.email);
+  window.open(url, "_blank", "noopener");               // 決済画面のメールを固定
 }
 
 /* =========================================================================
@@ -588,9 +592,13 @@ function showModal(html){
 }
 function closeModal(){ $("overlay").classList.remove("open"); }
 
-function openLogin(){
+function openLogin(context){
+  var intro = (context === "purchase")
+    ? '<div class="note" style="margin:0 0 14px;background:var(--accent-tint);color:var(--accent-ink);border-radius:10px;padding:11px 13px">ご購入の前に、ログイン／新規登録をお願いします。登録後に「購入する」を押すと、決済画面にメールアドレスが自動で入力され、購入後すぐにご利用いただけます。</div>'
+    : '';
   showModal(
     '<h2 id="dlg-title">ログイン／新規登録</h2>'+
+    intro+
     '<p class="lead">ご利用のメールアドレスを入力すると、届いたメールのリンクから登録・ログインができます。</p>'+
     '<label for="login-email">メールアドレス</label>'+
     '<input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />'+
@@ -654,10 +662,10 @@ function openGuide(){
     '<h2 id="dlg-title">ご利用ガイド（使い方）</h2>'+
     '<div class="body" style="margin-top:8px">'+
       '<p>試験対策のデジタル問題集を購入して、このページ上でご利用いただけます。はじめての方は、次の流れをご覧ください。</p>'+
-      guideStep("1","問題集を選ぶ","「問題集を選ぶ」から編を選び、回（午前・午後）を選びます。購入前でも内容と価格をご確認いただけます。")+
-      guideStep("2","購入する","「購入する」を押すと決済画面に進みます。クレジットカードのほか、Apple Pay・Google Pay・PayPay（お使いの端末・ブラウザで対応している場合）がご利用いただけます。")+
-      guideStep("3","ログインする","購入後はこのページに戻り、<b>購入時と同じメールアドレス</b>でログインします。入力したアドレスにログイン用のリンクが届きますので、そのリンクを開いてください。")+
-      guideStep("4","問題を開く","ログインすると、購入済みの問題に「開く」ボタンが表示されます。押すと問題ページが開きます。")+
+      guideStep("1","問題集を選ぶ","「問題集を選ぶ」から編を選び、回（午前・午後）を選びます。ログイン前でも内容と価格をご確認いただけます。")+
+      guideStep("2","ログイン／新規登録","ご購入の前に、ご利用のメールアドレスで登録・ログインします。入力したアドレスにリンクが届きますので、そのリンクを開いてください。パスワードは不要です。")+
+      guideStep("3","購入する","ログイン後に「購入する」を押すと決済画面に進みます。メールアドレスは自動で入力されます。クレジットカードのほか、Apple Pay・Google Pay・PayPay（お使いの端末・ブラウザで対応している場合）がご利用いただけます。")+
+      guideStep("4","問題を開く","ご購入後、購入済みの問題に「開く」ボタンが表示されます。押すと問題ページが開きます。")+
       '<div class="gnote">'+
         '<p><b>購入してもすぐに表示されないとき</b><br>ご購入の反映に数分かかる場合があります。少し時間をおいてから、画面上部の「購入状況を更新」を押してください。それでも表示されない場合はお問い合わせください。</p>'+
         '<p><b>便利な使い方</b><br>「ホーム画面に追加」をしておくと、次回からアプリのように、このページをすぐ開けます。</p>'+
