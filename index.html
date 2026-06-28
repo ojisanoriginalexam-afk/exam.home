@@ -147,6 +147,18 @@
   .kv .k{color:var(--muted);min-width:120px}
   .kv .v{flex:1}
 
+  /* ===== 実行中オーバーレイ（ログイン送信・認証中の視覚フィードバック＆連打防止）===== */
+  .loadlayer{position:fixed;inset:0;background:rgba(20,30,28,.5);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .loadlayer.open{display:flex}
+  .loadcard{background:var(--surface);border-radius:16px;max-width:340px;width:100%;padding:28px;text-align:center;box-shadow:0 16px 48px rgba(24,48,44,.22);animation:rise .25s ease both}
+  .loadcard .loadimg{width:104px;height:104px;object-fit:contain;display:none;margin:0 auto 16px;border-radius:14px;animation:loadpulse 1.6s ease-in-out infinite}
+  .loadcard .loadspin{width:40px;height:40px;margin:2px auto 16px;border-radius:50%;border:4px solid var(--accent-tint);border-top-color:var(--accent);animation:loadspin .9s linear infinite}
+  .loadcard .loadttl{font-size:16px;font-weight:700;margin:0 0 4px;color:var(--ink)}
+  .loadcard .loadsub{font-size:13px;color:var(--muted);margin:0}
+  @keyframes loadspin{to{transform:rotate(360deg)}}
+  @keyframes loadpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  @media (prefers-reduced-motion:reduce){.loadcard .loadspin{animation-duration:2.2s}.loadcard .loadimg{animation:none}}
+
   @media (max-width:560px){
     .bar{flex-direction:column;align-items:stretch}
     .acct{justify-content:space-between}
@@ -233,6 +245,16 @@
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title" id="dialog">
     <button class="x" id="dlg-x" aria-label="閉じる">&times;</button>
     <div id="dlg-content"></div>
+  </div>
+</div>
+
+<!-- ===== 実行中オーバーレイ（ログインの送信・認証中に表示）===== -->
+<div class="loadlayer" id="loadlayer" role="status" aria-live="polite" aria-hidden="true">
+  <div class="loadcard">
+    <img class="loadimg" id="loadimg" src="" alt="" />
+    <div class="loadspin" id="loadspin" aria-hidden="true"></div>
+    <p class="loadttl" id="loadttl">実行中…</p>
+    <p class="loadsub" id="loadsub"></p>
   </div>
 </div>
 
@@ -621,6 +643,29 @@ function showModal(html){
 }
 function closeModal(){ $("overlay").classList.remove("open"); }
 
+/* =========================================================================
+   実行中オーバーレイ（ログインの送信・認証中に表示して、連打を防ぐ）
+   ========================================================================= */
+// ▼ オーバーレイに表示する画像。同じフォルダに画像を置いてファイル名を入れてください。
+//    例： "loading.png" や "ojisan.png"。空文字 "" のままなら画像なし（スピナーのみ）。
+const LOADING_IMAGE = "";
+
+function showLoading(title, sub){
+  const img = $("loadimg");
+  if(LOADING_IMAGE){ img.src = LOADING_IMAGE; img.style.display = "block"; }
+  else { img.style.display = "none"; }
+  $("loadttl").textContent = title || "実行中…";
+  $("loadsub").textContent = sub || "";
+  const layer = $("loadlayer");
+  layer.classList.add("open");
+  layer.setAttribute("aria-hidden","false");
+}
+function hideLoading(){
+  const layer = $("loadlayer");
+  layer.classList.remove("open");
+  layer.setAttribute("aria-hidden","true");
+}
+
 function openLogin(context){
   var intro = (context === "purchase")
     ? '<div class="note" style="margin:0 0 14px;background:var(--accent-tint);color:var(--accent-ink);border-radius:10px;padding:11px 13px">ご購入の前に、ログイン／新規登録をお願いします。登録後に「購入する」を押すと、決済画面にメールアドレスが自動で入力され、購入後すぐにご利用いただけます。</div>'
@@ -635,16 +680,31 @@ function openLogin(context){
     '<div class="note" style="margin-top:14px">はじめての方は、ご利用中のメールアドレスを入力して登録してください。ご購入済みの方は、購入時に使用したメールアドレスでログインしてください。別のメールアドレスだと、購入した問題が分かれて表示されます。</div>'
   );
   $("dlg-title").focus && $("dlg-title").focus();
+  let _sending = false;
   $("btn-send").onclick = async ()=>{
+    if(_sending) return;                                  // 二度押しガード
     const email = ($("login-email").value||"").trim();
     if(!email){ $("login-email").focus(); return; }
-    await sendLoginLink(email);
-    showModal(
-      '<h2 id="dlg-title">メールを確認してください</h2>'+
-      '<p class="lead">'+escapeHtml(email)+' 宛にログインリンクを送信しました。メール内のリンクを開くとログインできます。</p>'+
-      '<button class="btn block" id="btn-close2">閉じる</button>'
-    );
-    $("btn-close2").onclick = closeModal;
+    _sending = true;
+    const sendBtn = $("btn-send");
+    if(sendBtn){ sendBtn.disabled = true; }
+    showLoading("ログインリンクを送信しています…","メールをお送りしています。少々お待ちください。");
+    let ok = true;
+    try{ ok = await sendLoginLink(email); }
+    catch(e){ ok = false; }
+    hideLoading();
+    if(ok){
+      showModal(
+        '<h2 id="dlg-title">メールを確認してください</h2>'+
+        '<p class="lead">'+escapeHtml(email)+' 宛にログインリンクを送信しました。メール内のリンクを開くとログインできます。</p>'+
+        '<button class="btn block" id="btn-close2">閉じる</button>'
+      );
+      $("btn-close2").onclick = closeModal;
+    } else {
+      _sending = false;
+      if(sendBtn){ sendBtn.disabled = false; }
+      alert("送信に失敗しました。通信環境をご確認のうえ、もう一度お試しください。");
+    }
   };
 }
 
@@ -765,12 +825,15 @@ $("year").textContent = new Date().getFullYear();
 window.addEventListener("hashchange", applyRoute);
 
 (async function init(){
+  const hasToken = !!new URLSearchParams(location.search).get("token");
+  if(hasToken){ showLoading("ログイン処理中…","認証を確認しています。"); }
   anonVisible = await fetchVisible("");            // 未ログイン時の表示（DEFAULT）
   state.visible = anonVisible;
   applyRoute();                                    // URLの #cat=... に応じて画面を表示
   const fromToken = await consumeTokenFromUrl();   // 本番：URLのトークンでログイン
   const remembered = fromToken || loadSession();
   if(remembered){ await loginAs(remembered); }
+  if(hasToken){ hideLoading(); }
 
   // 購入完了で戻ってきたとき（Stripeのリダイレクト先に ?purchased=1 を付ける）
   const params = new URLSearchParams(location.search);
