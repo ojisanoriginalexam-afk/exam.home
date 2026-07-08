@@ -309,14 +309,18 @@ const CONTENT = [
     buyUrl:     "https://buy.stripe.com/aFa7sM9RL15y7VF0Spds405?client_reference_id=setD"
   },
   {
-    id: "setE", categoryId: "cat1", status: "coming",
+    id: "setE", categoryId: "cat1",
     title: "第４４回　午前",
-    desc: "午前の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです"
+    desc: "午前の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです",
+    price: 500,
+    buyUrl:     "https://buy.stripe.com/bJe00kbZT3dGek358Fds407?client_reference_id=setE"
   },
   {
-    id: "setF", categoryId: "cat1", status: "coming",
+    id: "setF", categoryId: "cat1",
     title: "第４４回　午後",
-    desc: "午後の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです"
+    desc: "午後の問題６０問の問題と選択肢が利用する度にランダムに変更する仕組みです",
+    price: 500,
+    buyUrl:     "https://buy.stripe.com/8x2eVed3XbKcgsb6cJds408?client_reference_id=setF"
   }
 ];
 
@@ -648,7 +652,7 @@ function closeModal(){ $("overlay").classList.remove("open"); }
    ========================================================================= */
 // ▼ オーバーレイに表示する画像。同じフォルダに画像を置いてファイル名を入れてください。
 //    例： "loading.png" や "ojisan.png"。空文字 "" のままなら画像なし（スピナーのみ）。
-const LOADING_IMAGE = "sorry_over.jpeg";
+const LOADING_IMAGE = "";
 
 function showLoading(title, sub){
   const img = $("loadimg");
