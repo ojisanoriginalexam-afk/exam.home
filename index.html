@@ -119,6 +119,15 @@
   .card.owned:hover{border-color:var(--owned-ink)}
   .tag.owned{background:#D7E7F7;color:var(--owned-ink)}
   .tag.locked{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+  /* 種類ごとの色。オレンジ＝分野別ノック（他とは形式が違う商品）
+     「購入済み」の青とは別の意味に割り当てているので、購入後もオレンジのまま残る */
+  .card.c-orange{background:#FFF3E2;border-color:#EFCB9B}
+  .card.c-orange:hover{border-color:#C9781A}
+  .card.c-orange .idx{background:#F8DDBB;color:#94550D}
+  .card.c-orange .tag.locked{background:#F8DDBB;color:#94550D;border-color:#EFCB9B}
+  .card.c-orange.owned{background:#FFF3E2;border-color:#EFCB9B}
+  .card.c-orange.owned:hover{border-color:#C9781A}
+  .card.c-orange.owned .idx{background:#C9781A;color:#fff}
   .card h3{font-size:15.5px;margin:0 0 6px;font-weight:700;line-height:1.5}
   .card .desc{font-size:13px;color:var(--muted);margin:0 0 14px;flex:1}
   .card .price{font-size:19px;font-weight:700;margin:0 0 12px}
@@ -393,6 +402,29 @@ const CONTENT = [
     buyUrl:     "https://buy.stripe.com/bJecN60hbbKc6RB7gNds40i?client_reference_id=kokka39_pm"
   },
   {
+    /* ▼ 分野別ノック（2026-10 追加）
+         販売を開始するときは
+           1. status: "coming" の行を消す
+           2. buyUrl の行を有効にして、Stripeの決済リンクを入れる
+              末尾の ?client_reference_id=kokka_knock は必須
+           3. price を決めた金額に直す
+         あわせて、ストア側スプレッドシートのコンテンツマスタに
+           kokka_knock → https://ojisanoriginalexam-afk.github.io/me2-exam/p2mhrb8ekw5ztqn4gvd_knock/
+         を登録すること（「開く」はそこからURLを取得するため）            */
+    id: "kokka_knock", categoryId: "cat3",
+    badge: "○×",
+    accent: "orange",          // ← 他と形式が違う商品であることを色で示す
+
+    title: "分野別ノック",
+    desc: "過去問の選択肢を1文ずつ○×で判定する反射トレーニングです。分野やキーワードで絞り込み、収録項目からランダムに出題します。回を追加するごとに項目が増えます。紙に印刷して解くこともできます。",
+    priceNote: "要相談",      // ← buyUrl が無い間は、この文字列が価格欄に出る
+    status: "coming"
+    /* 検品が終わったら status の行を消す。これだけで「要相談・お問い合わせ」で公開される。
+       将来、定価で売ることにしたら price と buyUrl を入れれば通常の商品に戻る
+       price: 800,
+       buyUrl: "https://buy.stripe.com/XXXX?client_reference_id=kokka_knock" */
+  },
+  {
     id: "kokka38_am", categoryId: "cat3",
     title: "第３８回　午前",
     desc: "午前の問題９０問の問題と選択肢が利用する度にランダムに変更する仕組みです",
@@ -646,8 +678,9 @@ function renderGrid(catId){
     const coming = item.status === "coming";
     const owned = !coming && state.purchased.has(item.id);
     const card = document.createElement("div");
-    card.className = "card" + (coming ? " soon" : (owned ? " owned" : ""));
-    const letter = String(item.id).replace(/^set/i,"").replace(/^kokka/i,"").replace(/_/g,"").toUpperCase();
+    card.className = "card" + (coming ? " soon" : (owned ? " owned" : ""))
+                   + (item.accent ? " c-" + item.accent : "");
+    const letter = item.badge || String(item.id).replace(/^set/i,"").replace(/^kokka/i,"").replace(/_/g,"").toUpperCase();
     const badge = owned ? EXAM_ICON : escapeHtml(letter);
     let inner = '<div class="card-head"><span class="idx">'+badge+'</span>';
     if(coming){
@@ -664,6 +697,10 @@ function renderGrid(catId){
       inner += '<button class="btn soon block" disabled>準備中</button>';
     } else if(owned){
       inner += '<button class="btn open block" data-open="'+item.id+'">'+EXAM_ICON+'開く</button>';
+    } else if(!item.buyUrl){
+      // 決済リンクを持たない商品＝価格が個別の商品。購入ではなく問い合わせへ誘導する
+      inner += '<p class="price">'+escapeHtml(item.priceNote || '要相談')+'</p>';
+      inner += '<button class="btn block" data-contact="'+item.id+'">お問い合わせ</button>';
     } else {
       inner += '<p class="price">'+yen(item.price)+' <small>（税込）</small></p>';
       inner += '<button class="btn buy block" data-buy="'+item.id+'">購入する</button>';
@@ -673,6 +710,10 @@ function renderGrid(catId){
   });
   grid.querySelectorAll("[data-open]").forEach(b=> b.onclick = ()=> openContent(b.getAttribute("data-open")));
   grid.querySelectorAll("[data-buy]").forEach(b=> b.onclick = ()=> buy(b.getAttribute("data-buy")));
+  grid.querySelectorAll("[data-contact]").forEach(b=> b.onclick = ()=> {
+    const it = CONTENT.find(c=> c.id === b.getAttribute("data-contact"));
+    openContact(it ? it.title : null);
+  });
 }
 
 function openContent(id){
@@ -823,9 +864,14 @@ function openPrivacy(){
     '</div>'
   );
 }
-function openContact(){
+function openContact(aboutTitle){
+  var about = aboutTitle
+    ? '<div class="note" style="margin:0 0 14px">「'+escapeHtml(aboutTitle)+'」のご購入をご検討の方へ。'+
+      'この商品は価格を個別にご案内しています。下記までお問い合わせください。</div>'
+    : '';
   showModal(
     '<h2 id="dlg-title">お問い合わせ</h2>'+
+    about+
     '<div class="body" style="margin-top:8px">'+
       '<p>ご購入時のメールアドレスから、下記までご連絡ください。</p>'+
       '<p><a href="mailto:'+escapeAttr(SHOP.contactEmail)+'">'+escapeHtml(SHOP.contactEmail)+'</a></p>'+
