@@ -402,27 +402,20 @@ const CONTENT = [
     buyUrl:     "https://buy.stripe.com/bJecN60hbbKc6RB7gNds40i?client_reference_id=kokka39_pm"
   },
   {
-    /* ▼ 分野別ノック（2026-10 追加）
-         販売を開始するときは
-           1. status: "coming" の行を消す
-           2. buyUrl の行を有効にして、Stripeの決済リンクを入れる
-              末尾の ?client_reference_id=kokka_knock は必須
-           3. price を決めた金額に直す
-         あわせて、ストア側スプレッドシートのコンテンツマスタに
+    /* ▼ 分野別ノック（2026-10 販売開始）
+         この商品は他と形式が違うため accent: "orange" で色を分けている。
+         コンテンツマスタ登録：
            kokka_knock → https://ojisanoriginalexam-afk.github.io/me2-exam/p2mhrb8ekw5ztqn4gvd_knock/
-         を登録すること（「開く」はそこからURLを取得するため）            */
+         （「開く」はそこからURLを取得するため、未登録だと購入者が開けない）
+         回を追加したときは desc の「※」以降と収録範囲の記述を見直すこと。 */
     id: "kokka_knock", categoryId: "cat3",
     badge: "○×",
     accent: "orange",          // ← 他と形式が違う商品であることを色で示す
 
     title: "分野別ノック",
-    desc: "過去問の選択肢を1文ずつ○×で判定する反射トレーニングです。分野やキーワードで絞り込み、収録項目からランダムに出題します。回を追加するごとに項目が増えます。紙に印刷して解くこともできます。",
-    priceNote: "要相談",      // ← buyUrl が無い間は、この文字列が価格欄に出る
-    status: "coming"
-    /* 検品が終わったら status の行を消す。これだけで「要相談・お問い合わせ」で公開される。
-       将来、定価で売ることにしたら price と buyUrl を入れれば通常の商品に戻る
-       price: 800,
-       buyUrl: "https://buy.stripe.com/XXXX?client_reference_id=kokka_knock" */
+    desc: "過去問の選択肢を1文ずつ○×で判定する反射トレーニングです。分野やキーワードで絞り込み、収録項目からランダムに出題します。回を追加するごとに項目が増えます。紙に印刷して解くこともできます。※ 図・グラフ問題と計算問題は含みません。",
+    price: 1000,
+    buyUrl:     "https://buy.stripe.com/9B614o1lf4hKdfZ58Fds40l?client_reference_id=kokka_knock"
   },
   {
     id: "kokka38_am", categoryId: "cat3",
@@ -698,8 +691,12 @@ function renderGrid(catId){
     } else if(owned){
       inner += '<button class="btn open block" data-open="'+item.id+'">'+EXAM_ICON+'開く</button>';
     } else if(!item.buyUrl){
-      // 決済リンクを持たない商品＝価格が個別の商品。購入ではなく問い合わせへ誘導する
-      inner += '<p class="price">'+escapeHtml(item.priceNote || '要相談')+'</p>';
+      // 決済リンクがまだ無い商品。金額が決まっていれば出し、ボタンは問い合わせにする。
+      // 貼り忘れたまま公開しても、壊れたリンクに飛ばすことがない。
+      inner += '<p class="price">'
+             + (item.priceNote ? escapeHtml(item.priceNote)
+                               : yen(item.price) + ' <small>（税込）</small>')
+             + '</p>';
       inner += '<button class="btn block" data-contact="'+item.id+'">お問い合わせ</button>';
     } else {
       inner += '<p class="price">'+yen(item.price)+' <small>（税込）</small></p>';
